@@ -98,6 +98,7 @@ arguments对象是所有（非箭头）函数中都可用的局部变量。你�
 参数也可以被设置
 
 ##### Bound Function
+跟原来的函数相关联
 
 ##### Interger-Indexed
 具有[[ViewedArrayBuffer]]，[[ArrayLength]]，[[ByteOffset]]和[[TypedArrayName]]的对象，跟内存块相关联，下标运算比较特殊
@@ -107,4 +108,4 @@ arguments对象是所有（非箭头）函数中都可用的局部变量。你�
 
 ##### Immutable Prototype
 
-不可变原型对象，不能给它再设置原型对象了
+不可变原型对象，Object.prototype, 不能给它再设置原型对象了
