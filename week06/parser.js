@@ -1,7 +1,7 @@
 const EOF = Symbol('EOF') // EOF: End of File
 let currentToken = null
 let currentAttribute = null
-let currentAttribute  = null
+let currentTextNode  = null
 
 let stack = [{type: 'document', children: []}]
 
@@ -38,6 +38,15 @@ function emit(token) {
       stack.pop()
     }
     currentTextNode = null
+  } else if (token.type === 'text') {
+    if (currentTextNode === null) {
+      currentTextNode = {
+        type: 'text',
+        content: ''
+      }
+      top.children.push(currentTextNode)
+    }
+    currentTextNode.content += token.content
   }
   console.log(token)
 }
@@ -288,3 +297,4 @@ body div img{
 </html>`
 
 parserHtml(html)
+console.log(stack[0])
