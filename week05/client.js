@@ -184,6 +184,7 @@ class ChunkedBodyParser {
       if (char === '\r') {
         this.current = this.READING_LENGTH_END
       } else {
+        // 注意16进制处理
         this.chunkLength = this.chunkLength * 16 + Number(`0x${char}`)
       }
     } else if (this.current === this.READING_LENGTH_END) {
