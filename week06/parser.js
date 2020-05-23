@@ -1,5 +1,5 @@
+const css = require('css')
 const EOF = Symbol('EOF') // EOF: End of File
-var css = require('css')
 let currentToken = null
 let currentAttribute = null
 let currentTextNode  = null
@@ -7,17 +7,22 @@ let currentTextNode  = null
 let stack = [{type: 'document', children: []}]
 
 let rules = []
-
 function addCSSRules (content) {
-  const ast = css.parse(content)
+  var ast = css.parse(content)
+  // ast = JSON
   rules.push(...ast.stylesheet.rules)
 }
 
 function match(element, selector) {
+  if (!selector) {
+    return false
+  }
   if (selector.startsWith('#')) {
-    return element.attributes.find(attr => attr.name === 'id' && attr.value === selector.slice(1))
+    return !!element.attributes.find(attr => attr.name === 'id' && attr.value === selector.slice(1))
   } else if (selector.startsWith('.')) {
-    return element.attributes.find(attr => attr.name === 'class' && attr.value === selector.slice(1))
+    // 处理带空格的class
+    console.log('带空格class', JSON.stringify(element.attributes.filter(attr => attr.name === 'class')))
+    return !!element.attributes.find(attr => attr.name === 'class' && attr.value.split(' ').includes(selector.slice(1))) // 处理class带空格
   } else {
     return element.tagName === selector
   }
@@ -25,11 +30,10 @@ function match(element, selector) {
 
 function computeCSS (element) {
   console.log(rules)
-  console.log('css rules for element', element)
   if (element.tagName === 'style') {
     return
   }
-  const elements = stack.slice().reverse()
+  const parents = stack.slice().reverse()
   if (!element.computedStyle) {
     element.computedStyle = {}
   }
@@ -41,8 +45,8 @@ function computeCSS (element) {
       continue
     }
     let j = 1
-    for (let i = 0;i < elements.length; ++i) {
-      if (match(element[i], selectorParts[j])) {
+    for (let i = 0;i < parents.length; ++i) {
+      if (match(parents[i], selectorParts[j])) {
         j++
       }
     }
@@ -58,6 +62,7 @@ function computeCSS (element) {
 
 function emit(token) {
   let top = stack[stack.length  - 1]
+  console.log(token)
   if (token.type === 'startTag') {
     let element = {
       type: "element",
@@ -66,13 +71,14 @@ function emit(token) {
     }
     element.tagName = token.tagName
     for (let p in token) {
-      if (p !== 'type' && p !== 'tagName') { // 这里应该是且
+      if (p !== 'type' && p !== 'tagName' && p !== 'isSelfClosing') { // 这里应该是且
         element.attributes.push({
           name: p,
           value: token[p]
         })
       }
     }
+    console.log('compute element', element)
     computeCSS(element)
     top.children.push(element)
     element.parent = top
@@ -100,11 +106,11 @@ function emit(token) {
     }
     currentTextNode.content += token.content
   }
-  console.log(token)
+  // console.log(token)
 }
+
 function data (c) {
   if (c === '<') {
-
     return tagOpen
   } else if (c === EOF) {
     emit({
@@ -170,10 +176,11 @@ function tagName(c) {
 function selfClosingStartTag(c) {
   if (c === '>') {
     currentToken.isSelfClosing = true
+    emit(currentToken)
     return data
   } else if (c === 'EOF') {
-
   } else {
+    // error报错
     return data
   }
 }
@@ -253,6 +260,7 @@ function beforeAttributeValue(c) {
 
 function UnquotedAttributeValue(c) {
   if (c.match(/^[\t\n\f ]$/)) {
+    currentToken[currentAttribute.name] = currentAttribute.value
     return beforeAttributeName
   } else if (c === '/') {
     currentToken[currentAttribute.name] = currentValue
@@ -272,6 +280,7 @@ function UnquotedAttributeValue(c) {
 
 function doubleQuotedAttributeValue(c) {
   if (c === '"') {
+    currentToken[currentAttribute.name] = currentAttribute.value
     return quotedAfterAttributeValue
   } else if (c === '\u0000') {
   } else if (c === EOF) {
@@ -286,6 +295,7 @@ function doubleQuotedAttributeValue(c) {
 
 function singleQuotedAttributeValue(c) {
   if (c === "'") {
+    currentToken[currentAttribute.name] = currentAttribute.value
     return quotedAfterAttributeValue
   } else if (c === '\u0000') {
   } else if (c === 'EOF') {
@@ -338,15 +348,17 @@ body div img{
     width:30px;
     background-color: #ff1111;
 }
+body div .test1 {
+  width: 40px;
+}
     </style>
 </head>
 <body>
     <div>
-        <img id="myid"/>
+        <img class="test1 test2" id="myid"/>
         <img />
     </div>
 </body>
 </html>`
 
 parserHtml(html)
-console.log(stack[0])
