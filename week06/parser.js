@@ -1,14 +1,62 @@
 const EOF = Symbol('EOF') // EOF: End of File
+var css = require('css')
 let currentToken = null
 let currentAttribute = null
 let currentTextNode  = null
 
 let stack = [{type: 'document', children: []}]
 
-function emit(token) {
-  // if (token.type !== 'text') {
+let rules = []
 
-  // }
+function addCSSRules (content) {
+  const ast = css.parse(content)
+  rules.push(...ast.stylesheet.rules)
+}
+
+function match(element, selector) {
+  if (selector.startsWith('#')) {
+    return element.attributes.find(attr => attr.name === 'id' && attr.value === selector.slice(1))
+  } else if (selector.startsWith('.')) {
+    return element.attributes.find(attr => attr.name === 'class' && attr.value === selector.slice(1))
+  } else {
+    return element.tagName === selector
+  }
+}
+
+function computeCSS (element) {
+  console.log(rules)
+  console.log('css rules for element', element)
+  if (element.tagName === 'style') {
+    return
+  }
+  const elements = stack.slice().reverse()
+  if (!element.computedStyle) {
+    element.computedStyle = {}
+  }
+  for (let rule of rules) {
+    let matched = false
+    const selectorParts = rule.selectors[0].split(' ').reverse()
+    if (!match(element, selectorParts[0])) {
+      console.log(match(element, selectorParts[0]))
+      continue
+    }
+    let j = 1
+    for (let i = 0;i < elements.length; ++i) {
+      if (match(element[i], selectorParts[j])) {
+        j++
+      }
+    }
+    if (j >= selectorParts.length) {
+      // 表示匹配成功
+      matched = true
+    }
+    if (matched) {
+      console.log('element:', element, 'matched rule', rule)
+    }
+  }
+}
+
+function emit(token) {
   let top = stack[stack.length  - 1]
   if (token.type === 'startTag') {
     let element = {
@@ -25,6 +73,7 @@ function emit(token) {
         })
       }
     }
+    computeCSS(element)
     top.children.push(element)
     element.parent = top
     if (!token.isSelfClosing) {
@@ -35,6 +84,9 @@ function emit(token) {
     if (top.tagName !== token.tagName) {
       // 不匹配,报错
     } else {
+      if (top.tagName === 'style') {
+        addCSSRules(top.children[0].content)
+      }
       stack.pop()
     }
     currentTextNode = null
