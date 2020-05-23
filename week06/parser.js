@@ -14,6 +14,7 @@ function addCSSRules (content) {
 }
 
 function match(element, selector) {
+  // TODO：处理复合选择器
   if (!selector) {
     return false
   }
@@ -28,6 +29,37 @@ function match(element, selector) {
   }
 }
 
+function specificity(selector) {
+  var p = [0, 0, 0, 0]
+  // var selectorParts = selector.split(' ')
+  // Todo: 处理复合选择器
+  for (let part of selector) {
+    // 处理
+    console.log('part', part)
+    if (part.startsWith('#')) {
+      p[1] += 1
+    } else if (part.startsWith('.')) {
+      p[2] += 1
+    } else {
+      p[3] += 1
+    }
+  }
+  return p
+}
+
+function compare(sp1, sp2) {
+  if (sp1[0] - sp2[0]) {
+    return sp1[0] - sp2[0]
+  }
+  if (sp1[1] - sp2[1]) {
+    return sp1[1] - sp2[1]
+  }
+  if (sp1[2] - sp2[2]) {
+    return sp1[2] - sp2[2]
+  }
+  return sp1[3] - sp2[3]
+}
+
 function computeCSS (element) {
   console.log(rules)
   if (element.tagName === 'style') {
@@ -38,31 +70,67 @@ function computeCSS (element) {
     element.computedStyle = {}
   }
   for (let rule of rules) {
-    let matched = false
-    const selectorParts = rule.selectors[0].split(' ').reverse()
-    if (!match(element, selectorParts[0])) {
-      console.log(match(element, selectorParts[0]))
-      continue
-    }
-    let j = 1
-    for (let i = 0;i < parents.length; ++i) {
-      if (match(parents[i], selectorParts[j])) {
-        j++
+    rule.selectors.forEach(selectorStr => {
+      // 处理逗号并集的情况
+      let matched = false
+      // const regExp = /([\w\.#=\[\]]+\s*[>]*)\s*/g
+      let selectorParts = selectorStr.split(' ').reverse()
+      // 写不出什么好的正则，暂时先这样处理
+      selectorParts.forEach((f, i) => {
+        if (f === '>') {
+          selectorParts[i-1] += '>'
+          selectorParts[i] = ''
+        } else if (f.startsWith('>')) {
+          selectorParts[i-1] += '>'
+          selectorParts[i] = f.slice(1)
+        }
+      })
+      selectorParts = selectorParts.filter(f => f)
+      console.log('selectorStr:', selectorStr)
+      // const selectorParts = selectorStr.match(regExp).reverse()
+      console.log('selectorPartsss:', JSON.stringify(selectorParts))
+      if (!match(element, selectorParts[0])) {
+        console.log(match(element, selectorParts[0]))
+        return
       }
-    }
-    if (j >= selectorParts.length) {
-      // 表示匹配成功
-      matched = true
-    }
-    if (matched) {
-      console.log('element:', element, 'matched rule', rule)
-    }
+      let j = 1
+      for (let i = 0;i < parents.length; ++i) {
+        if (match(parents[i], selectorParts[j])) {
+          j++
+        }
+      }
+      if (j >= selectorParts.length) {
+        // 表示匹配成功
+        matched = true
+      }
+      console.log('isMatched:', matched)
+      if (matched) {
+        console.log('slectorParts', selectorParts)
+        let spValue = specificity(selectorParts)
+        console.log('spValue', spValue)
+        let computedStyle = element.computedStyle
+        for (let declaration of rule.declarations) {
+          if (!computedStyle[declaration.property]) {
+            computedStyle[declaration.property] = {}
+          }
+          if (!computedStyle[declaration.property].specificity) {
+            // 如果没有优先级
+            computedStyle[declaration.property].value = declaration.value
+            computedStyle[declaration.property].specificity = spValue
+          } else if (compare(computedStyle[declaration.property].specificity, spValue) < 0) {
+            computedStyle[declaration.property].value = declaration.value
+            computedStyle[declaration.property].specificity = spValue
+          }
+        }
+        console.log('computedStyleee:',JSON.stringify(computedStyle, null, '   '))
+      }
+    })
   }
 }
 
 function emit(token) {
   let top = stack[stack.length  - 1]
-  console.log(token)
+  // console.log(token)
   if (token.type === 'startTag') {
     let element = {
       type: "element",
@@ -348,10 +416,10 @@ body div img{
     width:30px;
     background-color: #ff1111;
 }
-body div .test1 {
+body div .test1{
   width: 40px;
 }
-    </style>
+</style>
 </head>
 <body>
     <div>
