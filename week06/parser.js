@@ -1,3 +1,4 @@
+const css = require('css')
 const EOF = Symbol('EOF') // EOF: End of File
 let currentToken = null
 let currentAttribute = null
@@ -5,11 +6,131 @@ let currentTextNode  = null
 
 let stack = [{type: 'document', children: []}]
 
-function emit(token) {
-  // if (token.type !== 'text') {
+let rules = []
+function addCSSRules (content) {
+  var ast = css.parse(content)
+  // ast = JSON
+  rules.push(...ast.stylesheet.rules)
+}
 
-  // }
+function match(element, selector) {
+  // TODO：处理复合选择器
+  if (!selector) {
+    return false
+  }
+  if (selector.startsWith('#')) {
+    return !!element.attributes.find(attr => attr.name === 'id' && attr.value === selector.slice(1))
+  } else if (selector.startsWith('.')) {
+    // 处理带空格的class
+    console.log('带空格class', JSON.stringify(element.attributes.filter(attr => attr.name === 'class')))
+    return !!element.attributes.find(attr => attr.name === 'class' && attr.value.split(' ').includes(selector.slice(1))) // 处理class带空格
+  } else {
+    return element.tagName === selector
+  }
+}
+
+function specificity(selector) {
+  var p = [0, 0, 0, 0]
+  // var selectorParts = selector.split(' ')
+  // Todo: 处理复合选择器
+  for (let part of selector) {
+    // 处理
+    console.log('part', part)
+    if (part.startsWith('#')) {
+      p[1] += 1
+    } else if (part.startsWith('.')) {
+      p[2] += 1
+    } else {
+      p[3] += 1
+    }
+  }
+  return p
+}
+
+function compare(sp1, sp2) {
+  if (sp1[0] - sp2[0]) {
+    return sp1[0] - sp2[0]
+  }
+  if (sp1[1] - sp2[1]) {
+    return sp1[1] - sp2[1]
+  }
+  if (sp1[2] - sp2[2]) {
+    return sp1[2] - sp2[2]
+  }
+  return sp1[3] - sp2[3]
+}
+
+function computeCSS (element) {
+  console.log(rules)
+  if (element.tagName === 'style') {
+    return
+  }
+  const parents = stack.slice().reverse()
+  if (!element.computedStyle) {
+    element.computedStyle = {}
+  }
+  for (let rule of rules) {
+    rule.selectors.forEach(selectorStr => {
+      // 处理逗号并集的情况
+      let matched = false
+      // const regExp = /([\w\.#=\[\]]+\s*[>]*)\s*/g
+      let selectorParts = selectorStr.split(' ').reverse()
+      // 写不出什么好的正则，暂时先这样处理
+      selectorParts.forEach((f, i) => {
+        if (f === '>') {
+          selectorParts[i-1] += '>'
+          selectorParts[i] = ''
+        } else if (f.startsWith('>')) {
+          selectorParts[i-1] += '>'
+          selectorParts[i] = f.slice(1)
+        }
+      })
+      selectorParts = selectorParts.filter(f => f)
+      console.log('selectorStr:', selectorStr)
+      // const selectorParts = selectorStr.match(regExp).reverse()
+      console.log('selectorPartsss:', JSON.stringify(selectorParts))
+      if (!match(element, selectorParts[0])) {
+        console.log(match(element, selectorParts[0]))
+        return
+      }
+      let j = 1
+      for (let i = 0;i < parents.length; ++i) {
+        if (match(parents[i], selectorParts[j])) {
+          j++
+        }
+      }
+      if (j >= selectorParts.length) {
+        // 表示匹配成功
+        matched = true
+      }
+      console.log('isMatched:', matched)
+      if (matched) {
+        console.log('slectorParts', selectorParts)
+        let spValue = specificity(selectorParts)
+        console.log('spValue', spValue)
+        let computedStyle = element.computedStyle
+        for (let declaration of rule.declarations) {
+          if (!computedStyle[declaration.property]) {
+            computedStyle[declaration.property] = {}
+          }
+          if (!computedStyle[declaration.property].specificity) {
+            // 如果没有优先级
+            computedStyle[declaration.property].value = declaration.value
+            computedStyle[declaration.property].specificity = spValue
+          } else if (compare(computedStyle[declaration.property].specificity, spValue) < 0) {
+            computedStyle[declaration.property].value = declaration.value
+            computedStyle[declaration.property].specificity = spValue
+          }
+        }
+        console.log('computedStyleee:',JSON.stringify(computedStyle, null, '   '))
+      }
+    })
+  }
+}
+
+function emit(token) {
   let top = stack[stack.length  - 1]
+  // console.log(token)
   if (token.type === 'startTag') {
     let element = {
       type: "element",
@@ -18,13 +139,15 @@ function emit(token) {
     }
     element.tagName = token.tagName
     for (let p in token) {
-      if (p !== 'type' && p !== 'tagName') { // 这里应该是且
+      if (p !== 'type' && p !== 'tagName' && p !== 'isSelfClosing') { // 这里应该是且
         element.attributes.push({
           name: p,
           value: token[p]
         })
       }
     }
+    console.log('compute element', element)
+    computeCSS(element)
     top.children.push(element)
     element.parent = top
     if (!token.isSelfClosing) {
@@ -35,6 +158,9 @@ function emit(token) {
     if (top.tagName !== token.tagName) {
       // 不匹配,报错
     } else {
+      if (top.tagName === 'style') {
+        addCSSRules(top.children[0].content)
+      }
       stack.pop()
     }
     currentTextNode = null
@@ -48,11 +174,11 @@ function emit(token) {
     }
     currentTextNode.content += token.content
   }
-  console.log(token)
+  // console.log(token)
 }
+
 function data (c) {
   if (c === '<') {
-
     return tagOpen
   } else if (c === EOF) {
     emit({
@@ -118,10 +244,11 @@ function tagName(c) {
 function selfClosingStartTag(c) {
   if (c === '>') {
     currentToken.isSelfClosing = true
+    emit(currentToken)
     return data
   } else if (c === 'EOF') {
-
   } else {
+    // error报错
     return data
   }
 }
@@ -201,6 +328,7 @@ function beforeAttributeValue(c) {
 
 function UnquotedAttributeValue(c) {
   if (c.match(/^[\t\n\f ]$/)) {
+    currentToken[currentAttribute.name] = currentAttribute.value
     return beforeAttributeName
   } else if (c === '/') {
     currentToken[currentAttribute.name] = currentValue
@@ -220,6 +348,7 @@ function UnquotedAttributeValue(c) {
 
 function doubleQuotedAttributeValue(c) {
   if (c === '"') {
+    currentToken[currentAttribute.name] = currentAttribute.value
     return quotedAfterAttributeValue
   } else if (c === '\u0000') {
   } else if (c === EOF) {
@@ -234,6 +363,7 @@ function doubleQuotedAttributeValue(c) {
 
 function singleQuotedAttributeValue(c) {
   if (c === "'") {
+    currentToken[currentAttribute.name] = currentAttribute.value
     return quotedAfterAttributeValue
   } else if (c === '\u0000') {
   } else if (c === 'EOF') {
@@ -286,15 +416,17 @@ body div img{
     width:30px;
     background-color: #ff1111;
 }
-    </style>
+body div .test1{
+  width: 40px;
+}
+</style>
 </head>
 <body>
     <div>
-        <img id="myid"/>
+        <img class="test1 test2" id="myid"/>
         <img />
     </div>
 </body>
 </html>`
 
 parserHtml(html)
-console.log(stack[0])
