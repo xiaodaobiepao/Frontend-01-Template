@@ -13,7 +13,29 @@
 <body>
   <div class="container">
     <div class="cls" type="text hei" test="heihei">haha</div>
-    <div class="cls">hehehehehe</div>
+    <div class="second">hehehehehe
+      <p class="duanluo"></p>
+    </div>
+    <div class="third">
+      <div class="third-child"></div>
+    </div>
   </div>
+  <script src="./match.js"></script>
+  <script>
+    var ele1 = document.querySelector('.third-child')
+    var ele2 = document.querySelector('.cls')
+    var ele3 = document.querySelector('.third')
+    console.log(match(ele1, '.container .third-child')) // true
+    console.log(match(ele1, '.container > div.cls[test="heihei"]')) // false
+    console.log(match(ele2, '.container > div.cls[test="heihei"]')) // true
+    console.log(match(ele2, '.container> div.cls[test="heihei"]')) // true
+    console.log(match(ele2, '.container >div.cls[test="heihei"]')) // true
+    console.log(match(ele2, '.container>div.cls[test="heihei"]')) // true
+    console.log(match(ele2, '.container>div.cls[type="text hei"]')) // true
+    console.log(match(ele2, '.container>div.cls[type~="hei"]')) // true
+    console.log(match(ele2, '.container>div.cls[test|="he"]')) // true
+    console.log(match(ele3, '.container .cls ~ .third')) // true
+    console.log(match(ele3, '.container .second + .third')) // true
+  </script>
 </body>
 </html>
