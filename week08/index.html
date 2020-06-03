@@ -36,6 +36,7 @@
     console.log(match(ele2, '.container>div.cls[test|="he"]')) // true
     console.log(match(ele3, '.container .cls ~ .third')) // true
     console.log(match(ele3, '.container .second + .third')) // true
+    console.log(match(ele3, '.hehe .second + .third')) // false
   </script>
 </body>
 </html>

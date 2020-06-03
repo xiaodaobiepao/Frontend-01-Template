@@ -10,9 +10,10 @@ function match(element, selector) {
   }
   // Todo: 遍历节点和选择器，查看是否匹配
   let node = element
-  let i = 1, length = selectMatchs.length - 1
+  let i = 1, length = selectMatchs.length
   while (i < length) {
     let cur = selectMatchs[i]
+    // console.log('curSle', cur)
     if (cur.endsWith('>')) {
       // 子孙
       node = node.parentElement
@@ -41,12 +42,13 @@ function match(element, selector) {
     } else {
       let parent = node.parentElement
       while (parent) {
-        console.log('second', isSameNode(parent, cur))
+        // console.log('second', isSameNode(parent, cur))
         if (isSameNode(parent, cur)) {
           break
         }
         parent = parent.parentElement
       }
+      // console.log('parent', parent)
       if (!parent) {
         return false
       }
