@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test</title>
   <style>
-    .container>.cls[type="text hei"] {
+    .container>.cls[type^="text"] {
       color: green;
     }
   </style>
@@ -33,10 +33,14 @@
     console.log(match(ele2, '.container>div.cls[test="heihei"]')) // true
     console.log(match(ele2, '.container>div.cls[type="text hei"]')) // true
     console.log(match(ele2, '.container>div.cls[type~="hei"]')) // true
-    console.log(match(ele2, '.container>div.cls[test|="he"]')) // true
+    console.log(match(ele2, '.container>div.cls[test|="he"]')) // false
+    console.log(match(ele2, '.container>div.cls[test^="he"]')) // true
+    console.log(match(ele2, '.container>div.cls[test$="ei"]')) // true
+    console.log(match(ele2, '.container>div.cls[test*="ih"]')) // true
     console.log(match(ele3, '.container .cls ~ .third')) // true
     console.log(match(ele3, '.container .second + .third')) // true
     console.log(match(ele3, '.hehe .second + .third')) // false
+    console.log(match(ele3, '.container .cls ~ .cls')) // false
   </script>
 </body>
 </html>
