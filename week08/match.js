@@ -59,7 +59,7 @@ function match(element, selector) {
 function isSameNode (node, selectorStr) {
   // 判断当前节点是否是当前选择器
   const tagName = /[a-z]/.test(selectorStr[0]) ? selectorStr.match(/([a-z]+)/)[1] : '' // 标签必须在第一位
-  const id = (selectorStr.match(/#[a-z_\d\-]+/) || [])[1] // 获取第一个匹配的id
+  const id = (selectorStr.match(/#([a-z_\d\-]+)+/) || [])[1] // 获取第一个匹配的id
   const classList = (selectorStr.match(/\.[a-z_\d\-_]+/g) || []).map(m => m.slice(1))
   const attrList = (selectorStr.match(/\[[a-z_\-\d='"~|^*$ ]+\]/g) || []).map(m => m.slice(1, m.length - 1))
   const pseudoClasses = (selectorStr.match(/:[a-z\-]+/g) || []).map(m => m.slice(1))  // 不考虑伪类

@@ -12,7 +12,7 @@
 </head>
 <body>
   <div class="container">
-    <div class="cls" type="text hei" test="heihei">haha</div>
+    <div class="cls" id="first-id" type="text hei" test="heihei">haha</div>
     <div class="second">hehehehehe
       <p class="duanluo"></p>
     </div>
@@ -41,6 +41,7 @@
     console.log(match(ele3, '.container .second + .third')) // true
     console.log(match(ele3, '.hehe .second + .third')) // false
     console.log(match(ele3, '.container .cls ~ .cls')) // false
+    console.log(match(ele2, '.container #first-id.cls')) // true
   </script>
 </body>
 </html>
