@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>井字棋</title>
+</head>
+<style>
+  .container {
+    display: flex;
+    width: 300px;
+    height: 300px;
+    flex-wrap: wrap;
+  }
+  .box {
+    width: 90px;
+    height: 90px;
+    background-color: lightblue;
+    color: #ffffff;
+    margin: 5px;
+    text-align: center;
+    line-height: 90px;
+    font-size: 50px;
+  }
+</style>
+<body>
+    <div class="container"></div>
+    <script>
+      // 1: O, 0: X
+      let pattern = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+      ]
+      let opType = 1
+      function render () {
+        let containerBox = document.querySelector('.container')
+        containerBox.innerHTML = ''
+        for (let i=0; i < pattern.length; ++i) {
+          for (let j = 0; j < pattern[i].length; ++j) {
+            const div = document.createElement('div')
+            div.classList.add('box')
+            div.textContent = pattern[i][j] === 1 ? 'o' : pattern[i][j] == 2 ? 'x' : ''
+            div.addEventListener('click', () => move(j, i))
+            // div.onclick = handleClick
+            containerBox.appendChild(div)
+          }
+        }
+      }
+
+      function move (x, y) {
+        pattern[y][x] = opType
+        render()
+        if (check(pattern, x, y, opType)) {
+          alert(opType === 1 ? 'o win' : 'x win')
+        }
+        opType = 3 - opType
+        if (willWin(pattern,  opType)) {
+          console.log(opType === 1 ? 'o will win' : 'x will win')
+        }
+        console.log(this.bestChoice(pattern, opType))
+      }
+
+      function willWin (pattern, opType) {
+        for (let i = 0; i < pattern.length; ++i) {
+          for (let j = 0; j < pattern.length; ++j) {
+            if (!pattern[i][j]) {
+              pattern[i][j] = opType
+              if (check(pattern, j, i, opType)) {
+                pattern[i][j] = 0
+                return [j, i]
+              }
+              pattern[i][j] = 0
+            }
+          }
+        }
+        return null
+      }
+
+      function bestChoice (pattern, opType) {
+        let point = willWin(pattern, opType)
+        if (point) {
+          return {
+            point: point,
+            result: 1
+          }
+        }
+        let result = -1
+        // 递归比较绕
+        for (let i = 0; i < pattern.length; ++i) {
+          for (let j = 0; j < pattern.length; ++j) {
+            if (!pattern[i][j]) {
+              pattern[i][j] = opType
+              let opp = bestChoice(pattern,  3 - opType)
+              if (-opp.result >= result) {
+                point = [j, i]
+                result = -opp.result
+              }
+              pattern[i][j] = 0
+            }
+          }
+        }
+        return {
+          point: point,
+          result: point ? result : 0
+        }
+      }
+
+      function check (pattern, x, y, opType) {
+        let win = true
+        for (let k = 0; k < pattern.length; ++k) {
+          if (pattern[y][k] !== opType) {
+            win = false
+            break
+          }
+        }
+        if (win) {
+          return true
+        }
+        win = true
+        for (let k = 0; k < pattern.length; ++k) {
+          if (pattern[k][x] !== opType) {
+            win = false
+            break
+          }
+        }
+        if (win) {
+          return true
+        }
+        if (x == y) {
+          win = true
+          for (let k = 0; k < pattern.length; ++k) {
+            if (pattern[k][k] !== opType) {
+              win = false
+              break
+            }
+          }
+          if (win) {
+            return true
+          }
+        }
+        if (x + y == pattern.length - 1) {
+          win = true
+          for (let k = 0; k < pattern.length; ++k) {
+            let l = pattern.length - 1
+            if (pattern[k][l-k] !== opType) {
+              win = false
+              break
+            }
+          }
+          if (win) {
+            return true
+          }
+        }
+        return false
+      }
+
+      render()
+    </script>
+</body>
+</html>
