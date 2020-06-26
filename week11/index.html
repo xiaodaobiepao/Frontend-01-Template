@@ -70,6 +70,9 @@
       insert(value) {
         this.data.push(value)
       }
+      clear() {
+        this.data = []
+      }
       length() {
         return this.data.length
       }
@@ -80,7 +83,13 @@
     let saveBtn = document.querySelector('.saveBtn')
     let clearBtn = document.querySelector('.clearBtn')
     let findBtn = document.querySelector('.findBtn')
+    let isMouseDown = false
+    let clear = false
+    let collection
     function show () {
+      if (container.innerHTML) {
+        container.innerHTML = ''
+      }
       for (let i = 0; i < 100; ++i) {
         for (let j = 0; j < 100; ++j) {
           let cell = document.createElement('div')
@@ -99,6 +108,9 @@
               }
             }
           })
+          cell.addEventListener('click', () => {
+            alert(j + '---' + i)
+          })
           container.appendChild(cell)
         }
       }
@@ -113,6 +125,9 @@
       show()
     }
     function findMap () {
+      // data = localStorage.getItem('map') ? JSON.parse(localStorage.getItem('map')) : new Array(10000).fill(0)
+      // collection && collection.clear()
+      show()
       const startV = [Number(document.querySelector('.startx').value), Number(document.querySelector('.starty').value)]
       const endV = [Number(document.querySelector('.endx').value), Number(document.querySelector('.endy').value)]
       // console.log(startV, endV)
@@ -121,8 +136,6 @@
     saveBtn.addEventListener('click', saveMap)
     clearBtn.addEventListener('click', clearMap)
     findBtn.addEventListener('click', findMap)
-    let isMouseDown = false
-    let clear = false
     document.addEventListener('mousedown', e => {
       isMouseDown = true
       clear = e.which === 3
@@ -143,7 +156,7 @@
     
 
     async function findPath (map, start, end) {
-      let collection = new Sortd([start], (a, b) => distance(a) - distance(b))
+      collection = new Sortd([start], (a, b) => distance(a) - distance(b))
       map = map.slice()
 
       function distance ([x, y]) {
