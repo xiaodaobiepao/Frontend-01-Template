@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .container {
+      width: 601px;
+      /* line-height: 6px; */
+      font-size: 0;
+    }
+    .cell {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background-color: gray;
+      vertical-align: middle;
+      /* border-right: 1px solid #ffffff; */
+      /* border: 1px solid #ffffff; */
+      border: none;
+      /* line-height: 6px; */
+    }
+    .green {
+      background-color: lightgreen;
+    }
+    .pink {
+      background-color: pink;
+    }
+    .black {
+      background-color: #000000;
+    }
+  </style>
+</head>
+<body>
+  <button class="saveBtn">Save</button>
+  <button class="clearBtn">Clear All</button>
+  <div class="find-box">
+    <span class="label">起点：</span>
+    <input class="startx" value="0" type="text">
+    <input class="starty" value="0" type="text">
+    <br>
+    <span class="label">终点</span>
+    <input class="endx" value="50" type="text">
+    <input class="endy" value="50" type="text">
+    <br>
+    <button class="findBtn">find Path</button>
+  </div>
+  <div class="container"></div>
+  <script>
+    class Sortd {
+      constructor(data, compare) {
+        this.data = data
+        this.compare = compare
+      }
+      take() {
+        if (!this.data.length) return
+        let min = this.data[0]
+        let minIndex = 0
+        for (let i = 1; i < this.data.length; ++i) {
+          if (this.compare(this.data[i], min) < 0) {
+            min = this.data[i]
+            minIndex = i
+          }
+        }
+        this.data[minIndex] = this.data[this.data.length - 1]
+        this.data.pop()
+        return min
+      }
+      insert(value) {
+        this.data.push(value)
+      }
+      length() {
+        return this.data.length
+      }
+    }
+
+    var data = localStorage.getItem('map') ? JSON.parse(localStorage.getItem('map')) : new Array(10000).fill(0)
+    let container = document.querySelector('.container')
+    let saveBtn = document.querySelector('.saveBtn')
+    let clearBtn = document.querySelector('.clearBtn')
+    let findBtn = document.querySelector('.findBtn')
+    function show () {
+      for (let i = 0; i < 100; ++i) {
+        for (let j = 0; j < 100; ++j) {
+          let cell = document.createElement('div')
+          cell.classList.add('cell')
+          if (data[i * 100 + j]) {
+            cell.classList.add('black')
+          }
+          cell.addEventListener('mousemove', () => {
+            if (isMouseDown) {
+              if (clear) {
+                cell.classList.remove('black')
+                data[i * 100 + j] = 0
+              } else {
+                data[i * 100 + j] = 1
+                cell.classList.add('black')
+              }
+            }
+          })
+          container.appendChild(cell)
+        }
+      }
+    }
+    function saveMap () {
+      localStorage.setItem('map', JSON.stringify(data))
+    }
+    function clearMap () {
+      localStorage.removeItem('map')
+      data = new Array(10000).fill(0)
+      container.innerHTML = ''
+      show()
+    }
+    function findMap () {
+      const startV = [Number(document.querySelector('.startx').value), Number(document.querySelector('.starty').value)]
+      const endV = [Number(document.querySelector('.endx').value), Number(document.querySelector('.endy').value)]
+      // console.log(startV, endV)
+      findPath(data, startV, endV)
+    }
+    saveBtn.addEventListener('click', saveMap)
+    clearBtn.addEventListener('click', clearMap)
+    findBtn.addEventListener('click', findMap)
+    let isMouseDown = false
+    let clear = false
+    document.addEventListener('mousedown', e => {
+      isMouseDown = true
+      clear = e.which === 3
+    })
+    document.addEventListener('mouseup', () => {
+      isMouseDown = false
+    })
+    document.addEventListener('contextmenu', e => e.preventDefault())
+    document.addEventListener('dragstart', e => e.preventDefault())
+    show()
+
+    function sleep (time) {
+      return new Promise(resolve => {
+        setTimeout(resolve, time)
+      })
+    }
+
+    
+
+    async function findPath (map, start, end) {
+      let collection = new Sortd([start], (a, b) => distance(a) - distance(b))
+      map = map.slice()
+
+      function distance ([x, y]) {
+        return (x - end[0]) ** 2 + (y - end[1]) ** 2
+      }
+      async function insert(x, y, pre) {
+        if (map[100 * y + x] !== 0) {
+          return
+        }
+        if (x < 0 || y < 0 || x >= 100 || y >= 100) {
+          return
+        }
+        map[100 * y + x] = pre
+        container.children[y * 100 + x].classList.add('green')
+        await sleep(2)
+        // queue.push([x, y])
+        collection.insert([x, y])
+      }
+      while (collection.length()) {
+        let [x, y] = collection.take()
+        if (x === end[0] && y === end[1]) {
+          let path = []
+          while (x !== start[0] || y !== start[1]) {
+            path.push([x, y])
+            container.children[y * 100 + x].classList.add('pink')
+            ;[x, y] = map[y * 100 + x]
+          }
+          return path
+        }
+        await insert(x - 1, y, [x, y])
+        await insert(x + 1, y, [x, y])
+        await insert(x, y - 1, [x, y])
+        await insert(x, y + 1, [x, y])
+
+        if (map[y * 100 + x - 1] !== 1 || map[(y - 1) * 100 + x] !== 1) {
+          await insert(x - 1, y - 1, [x, y])
+        }
+        if (map[y * 100 + x + 1] !== 1 || map[(y - 1) * 100 + x] !== 1) {
+          await insert(x + 1, y - 1, [x, y])
+        }
+        if (map[y * 100 + x - 1] !== 1 || map[(y + 1) * 100 + x] !== 1) {
+          await insert(x - 1, y + 1, [x, y])
+        }
+        if (map[y * 100 + x + 1] !== 1 || map[(y + 1) * 100 + x] !== 1) {
+          await insert(x + 1, y + 1, [x, y])
+        }
+      }
+      console.log('zhaobudao')
+      return null
+    }
+  </script>
+</body>
+</html>
