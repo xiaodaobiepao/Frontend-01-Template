@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kmp</title>
+</head>
+<body>
+  <script>
+    // function find(source, pattern) {
+    //   for (let i = 0; i < source.length; ++i) {
+    //     let matched = true
+    //     for (let j = 0; j < pattern.length; ++j) {
+    //       if (source[i + j] !== pattern[j]) {
+    //         matched = false
+    //         break
+    //       }
+    //     }
+    //     if (matched) return true
+    //   }
+    //   return false
+    // }
+    function find(source, pattern) {
+      let map = new Array(pattern.length).fill(-1)
+      let k = -1 // k 就是map[j]对应的最长可匹配前缀的下标，默认为-1，表示没有
+      // 运用到了dp的思想
+      // 假设patten === 'abcabc', 当j = 4时，此时的最长可匹配前缀子串是ab, 对应的最后一个字符的下标是1
+      // 即map[4] = 1, 那么j++后，j==5时，此时，如果map[4] 对应的子串ab 下一个 pattern[2] === pattern[5]时，则map[5] = 2
+      for (let j = 1; j < map.length; ++j) {
+        while (k !== -1 && pattern[k+1] !== pattern[j] && pattern[k+1] !== '?' && pattern[j] !== '?') {
+          // 如果k不等于-1，表示map[j-1] 有对应的最长可匹配前缀子串的末尾字符，值为k
+          // 那么如果下一个字符及pattern[k+1] === pattern[j], 那么map[j]必定等于k+1
+          // 如果pattern[k+1] !== pattern[j], 则继续找pattem[0, k]的最长可匹配子串，直到-1表示找不到为止
+          k = map[k]
+        }
+        if (pattern[k+1] === pattern[j] || pattern[k+1] === '?' || pattern[j] === '?') {
+          // 如果下一个字符pattern[k+1] === pattern[j],则map[j] == k+1
+          k++
+        }
+        map[j] = k
+      }
+      let j = 0
+      for (let i = 0; i < source.length; ++i) {
+        while (source[i] !== pattern[j] && pattern[j] !== '?' && j > 1) {
+          // 有前面一部分匹配, j重置为pattern[j-1]最长可匹配前缀子串的最后一个字符(即map[j-1])的下一个位置
+          j = map[j-1] + 1
+        }
+        if (source[i] === pattern[j] || pattern[j] === '?') {
+          j++
+        }
+        if (j === pattern.length) {
+          // 匹配到头了
+          return i - pattern.length + 1
+        }
+      }
+      return -1
+    }
+  </script>
+</body>
+</html>
