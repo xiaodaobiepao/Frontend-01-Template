@@ -21,6 +21,12 @@
     //   return false
     // }
     function find(source, pattern) {
+      if (pattern === '') {
+        return 0
+      }
+      if (!pattern) {
+        throw(new Error('目标不存在'))
+      }
       let map = new Array(pattern.length).fill(-1)
       let k = -1 // k 就是map[j]对应的最长可匹配前缀的下标，默认为-1，表示没有
       // 运用到了dp的思想
