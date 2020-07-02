@@ -33,7 +33,7 @@
       }
       let j = 0
       for (let i = 0; i < source.length; ++i) {
-        while (source[i] !== pattern[j] && pattern[j] !== '?' && j > 1) {
+        while (source[i] !== pattern[j] && pattern[j] !== '?' && j > 0) {
           // 有前面一部分匹配, j重置为pattern[j-1]最长可匹配前缀子串的最后一个字符(即map[j-1])的下一个位置
           j = map[j-1] + 1
         }
