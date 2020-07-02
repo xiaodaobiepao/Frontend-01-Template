@@ -7,7 +7,12 @@
 </head>
 <body>
   <script>
+    // whildcard *：任意若干个字符，包括空字符''，？表示匹配一个字符
+    // 必须从第一个开始完全匹配
     function kmpFind(source, pattern) {
+      if (pattern.length === 0) {
+        return 0
+      }
       let map = new Array(pattern.length).fill(-1)
       let k = -1 // k 就是map[j]对应的最长可匹配前缀的下标，默认为-1，表示没有
       // 运用到了dp的思想
@@ -50,52 +55,76 @@
         }
       }
       if (starCount === 0) {
-        return kmpFind(source, pattern) !== -1
+        return kmpFind(source, pattern) === 0
       }
-      // let i = 0
-      // let lastIndex = 0
-      // for (i = 0; pattern[i] !== '*'; ++i) {
-      //   if (pattern[i] !== source[i] && pattern[i] !== '?') {
-      //     return false
-      //   }
-      // }
-
-      // lastIndex = i
       lastPosition = 0
-      for (let c = 0; c < starCount - 1;  c++) {
-        let k = 0
+      let k = -1
+      for (let c = 0; c <= starCount;  c++) {
+        k++
         let subPattern = ''
-        while (pattern[k] !== '*') {
+        while (pattern[k] && pattern[k] !== '*') {
           subPattern += pattern[k]
           k++
         }
-        lastPosition = kmpFind(source, subPattern)
-        if (lastPosition === -1) {
+        // let oldPosition = lastPosition
+        let newPosition = kmpFind(source.slice(lastPosition), subPattern)
+        if (c === 0 && newPosition !== 0) {
+          // 第一个星号之前必须全匹配，否则不匹配
           return false
         }
-        lastPosition
-      }
-      for (let p = 0; p < starCount - 1; p++) {
-        i++
-        let subPattern = ''
-        while (pattern[i] !== '*') {
-          subPattern += pattern[i]
-          i++
-        }
-        // console.log(subPattern)
-        let reg = new RegExp(subPattern.replace(/\?/g, '[\\s\\S]', 'g'))
-        reg.lastIndex = lastIndex
-        reg.exec(source)
-        lastIndex = reg.lastIndex
-      }
-
-      for (let j = 0; j <= lastIndex && pattern[pattern.length - j] !== '*'; ++j) {
-        if (pattern[pattern.length - j] !== source[source.length - 1] && pattern[pattern.length - j] !== '?') {
+        if (newPosition === -1) {
+          // 表示不匹配
           return false
         }
+        lastPosition = lastPosition + subPattern.length + newPosition
       }
+      if (lastPosition < source.length) {
+        // const index =  kmpFind(source.slice(lastPosition), pattern.slice(k+1))
+        // if (index === -1) return false
+        return pattern[pattern.length - 1] === '*' ? true : false // 当最后一个是*，则是贪婪匹配
+      }
+      // 按理说到不了这里
       return true
     }
+    console.log(find('abcabxbbb', 'a?c*xb*bb')) // true
+    console.log(find('abcabxbbb', 'a*cd*xb*bb')) // false
+    console.log(find('abcabxbbb', 'a?c*xb?bb')) // false
+    console.log(find('abcabxbbb', 'a?c*xb?b')) // true
+    console.log(find('abcabxbbb', '*?cabxbbbb*')) // false
+    console.log(find('abcabxbbb', '*?cabxb*')) // true
+    console.log(find('abcabxbbbbbb', 'a?c*xb?b')) // false
+
+    // function regFind(source, pattern) {
+      // let starCount = 0 // 星星个数
+      // for (let i = 0; i < pattern.length; ++i) {
+      //   if (pattern[i] === '*') {
+      //     starCount++
+      //   }
+      // }
+      // if (starCount === 0) {
+      //   // 没有星号的情况
+      // }
+      // for (let p = 0; p < starCount - 1; p++) {
+      //   i++
+      //   let subPattern = ''
+      //   while (pattern[i] !== '*') {
+      //     subPattern += pattern[i]
+      //     i++
+      //   }
+      //   // console.log(subPattern)
+      //   let reg = new RegExp(subPattern.replace(/\?/g, '[\\s\\S]', 'g'))
+      //   reg.lastIndex = lastIndex
+      //   reg.exec(source)
+      //   lastIndex = reg.lastIndex
+      // }
+
+      // for (let j = 0; j <= lastIndex && pattern[pattern.length - j] !== '*'; ++j) {
+      //   if (pattern[pattern.length - j] !== source[source.length - 1] && pattern[pattern.length - j] !== '?') {
+      //     return false
+      //   }
+      // }
+      // return true
+    // }
   </script>
 </body>
 </html>
