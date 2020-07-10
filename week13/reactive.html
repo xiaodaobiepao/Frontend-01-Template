@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proxy</title>
+</head>
+<body>
+  <script>
+    let object = {
+      a: 1,
+      b: 2
+    }
+    let usedReactivity = []
+    let reactivities = new Map()
+    let handlers = new Map()
+    function reactive (obj) {
+      if (reactivities.has(obj)) {
+        return reactivities.get(obj)
+      }
+      let proxy = new Proxy(object, {
+        get(obj, prop) {
+          usedReactivity.push([obj, prop])
+          if (typeof obj[prop] === 'object' && obj[prop] !== null) {
+            return reactive(obj[prop1])
+          }
+          return obj[prop]
+        },
+        set(obj, prop, val) {
+          obj[prop] = val
+          for (let handler of handlers.get(obj).get(prop)) {
+            handler()
+          }
+          return obj[prop]
+        }
+      })
+      reactivities.set(obj, proxy)
+      reactivities.set(proxy, proxy)
+      return proxy
+    }
+
+    function effect(handler) {
+      usedReactivity = []
+      handler()
+      for (let key of usedReactivity) {
+        const [obj, prop] = key
+        if (!handlers.has(obj)) {
+          handlers.set(obj, new Map())
+        }
+        if (!handlers.get(obj).has(prop)) {
+          handlers.get(obj).set(prop, [])
+        }
+        handlers.get(obj).get(prop).push(handler)
+      }
+    }
+    let dummy
+    let proxy = reactive(object)
+    effect(() => dummy = proxy.a)
+    console.log(dummy)
+    proxy.a = 2
+    console.log(dummy)
+    // let proxy = new Proxy(object, {
+    //   get(obj, prop) {
+    //     console.log(obj, prop)
+    //     return obj['b']
+    //   },
+    //   defineProperty(obj, prop, desc) {
+    //     console.log(arguments)
+    //     return Object.defineProperty(obj, prop, desc)
+    //   }
+    // })
+  </script>
+</body>
+</html>
