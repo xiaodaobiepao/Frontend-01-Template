@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webpack</title>
+  <style>
+    .carousel {
+      height: 300px;
+      width: 500px;
+      white-space: nowrap;
+      overflow: hidden;
+      /* transition: transform 1s; */
+      /* zoom: 0.5; */
+    }
+    .carousel img {
+      width: 500px;
+      height: 300px;
+      display: inline-block;
+      transition: transform 1s;
+    }
+    #el {
+      width: 100px;
+      height: 100px;
+      background-color: lightblue;
+    }
+    #el2 {
+      width: 100px;
+      height: 100px;
+      background-color: skyblue;
+      /* transition: transform linear 5s; */
+    }
+  </style>
+</head>
+<body>
+  <button id="pause-btn">pause</button>
+  <button id="resume-btn">resume</button>
+  <button id="restart-btn">restart</button>
+  <div id="el"></div>
+  <div id="el2"></div>
+  <script src="./main.js"></script>
+  <script>
+    let el = document.getElementById('el')
+    // el.style.transition = 'ease 5s'
+    function start() {
+      el.style.transform = "translate(300px, 300px)"
+    }
+    function stop () {
+      el.style.transition = 'none'
+      el.style.transform = getComputedStyle(el).transform
+    }
+  </script>
+</body>
+</html>
