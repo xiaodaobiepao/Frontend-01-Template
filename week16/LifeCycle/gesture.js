@@ -114,9 +114,9 @@ export function enableGesture(element) {
   
   let end = (point, context) => {
     // console.log('end', point.clientX, point.clientY)
+    let dx = point.clientX - context.startX
+    let dy = point.clientY - context.startY
     if (context.isPan) {
-      let dx = point.clientX - context.startX
-      let dy = point.clientY - context.startY
       let record0 = context.moves[0]
       let speed = Math.sqrt((record0.dx - dx) ** 2 + (record0.dy - dy) ** 2) / (Date.now() - record0.t)
       let isFlick = speed > 2
@@ -152,6 +152,11 @@ export function enableGesture(element) {
       console.log('pressend')
       element.dispatchEvent(new CustomEvent('pressend', {}))
     }
+    element.dispatchEvent(new CustomEvent('end', {
+      detail: {
+        dx, dy
+      }
+    }))
     clearTimeout(context.timeoutHandlr)
   }
   

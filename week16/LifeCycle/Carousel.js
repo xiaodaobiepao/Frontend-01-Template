@@ -31,7 +31,9 @@ export class Carousel {
         this.pause()
         clearTimeout(nextPicStopHandler)
         let curElement = children[currentPosition]
+        console.log(curElement)
         let currentTransformValue = Number(curElement.style.transform.match(/translateX\(([\s\S]+)px\)/)[1])
+        console.log(currentTransformValue)
         offset = currentTransformValue + 500 * position
         // startX = event.clientX
       }
@@ -49,7 +51,36 @@ export class Carousel {
         lastElement.style.transform = `translateX(${lastTransformValue + dx}px)`
         nextElement.style.transform = `translateX(${nextTransformValue + dx}px)`
       }
-      let element = <img onStart={onStart} onPanmove={onPanmove} src={url} enableGesture={true} />
+      let onEnd = event => {
+        let direction = 0
+        let dx = event.detail.dx
+        if (dx + offset > 250) {
+          direction = 1
+        } else if (dx + offset < -250) {
+          direction = -1
+        }
+        let lastElement = children[lastPosition]
+        let curElement = children[currentPosition]
+        let nextElement = children[nextPosition]
+        this.timeline.restart()
+        console.log('direciton', direction)
+        // this.timeline.start()
+        // let currentTransformValue = 500 * currentPosition + offset + dx
+        // let lastTransformValue = -500 - 500 * lastPosition + offset + dx
+        // let nextTransformValue = 500 - 500 * nextPosition + offset + dx
+        if (direction) {
+          console.log('offset', offset)
+          console.log('currentPosition', currentPosition)
+          console.log('shs', - 500 * currentPosition + direction * 500)
+          let currentAnimation = new Animation(curElement.style, 'transform', v => `translateX(${v}px)`, -500 * currentPosition + offset + dx, - 500 * currentPosition + direction * 500, 500, 0, ease)
+          let lastAnimation = new Animation(lastElement.style, 'transform', v => `translateX(${v}px)`, -500 - 500 * lastPosition + offset + dx, -500 - 500 * lastPosition + direction * 500, 500, 0, ease)
+          let nextAnimation = new Animation(nextElement.style, 'transform', v => `translateX(${v}px)`, 500 * nextPosition + offset + dx, 500 - 500 * nextPosition + direction * 500, 500, 0, ease)
+          this.timeline.add(currentAnimation)
+          this.timeline.add(lastAnimation)
+          this.timeline.add(nextAnimation)
+        }
+      }
+      let element = <img onStart={onStart} onEnd={onEnd} onPanmove={onPanmove} src={url} enableGesture={true} />
       element.style.transform = 'translateX(0)'
       element.addEventListener('dragstart', event => event.preventDefault())
       return element
@@ -66,8 +97,8 @@ export class Carousel {
       let nextPosition = (position + 1) % this.data.length
       let current = rootDom.childNodes[position]
       let next = rootDom.childNodes[nextPosition]
-      let currentAnimation = new Animation(current.style, 'transform', (v => `translateX(${v}%)`), -100 * position, - 100 - 100 * position, 500, 0, ease)
-      let nextAnimation = new Animation(next.style, 'transform', (v => `translateX(${v}%)`), 100 - 100 * nextPosition, -100 * nextPosition, 500, 0, ease)
+      let currentAnimation = new Animation(current.style, 'transform', (v => `translateX(${v}px)`), -500 * position, - 500 - 500 * position, 500, 0, ease)
+      let nextAnimation = new Animation(next.style, 'transform', (v => `translateX(${v}px)`), 500 - 500 * nextPosition, -500 * nextPosition, 500, 0, ease)
       this.timeline.add(currentAnimation)
       this.timeline.add(nextAnimation)
       position = nextPosition

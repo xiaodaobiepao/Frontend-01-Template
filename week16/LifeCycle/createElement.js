@@ -38,15 +38,17 @@ class Wrapper {
   setAttribute(name, value) { // attribute
     // console.log(name, value)
     // console.log(name)
-    this.root.setAttribute(name, value)
     if (name.match(/^on([\s\S]+)$/)) {
       const eventName = RegExp.$1.replace(/^[\s\S]{1}/, c => c.toLowerCase())
       // console.log(value)
       this.root.addEventListener(eventName, value)
+      return
     }
     if (name === 'enableGesture') {
       enableGesture(this.root)
+      return
     }
+    this.root.setAttribute(name, value)
   }
   appendChild(child) {
     // console.log('child', child)
