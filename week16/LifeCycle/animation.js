@@ -6,6 +6,7 @@ export class TimeLine {
     this.state = 'inited'
     this.tick = () => {
       let t =  Date.now() - this.startTime
+      // console.log(this.requestId)
       let animations = this.animations.filter(animation => !animation.finished)
       for (let animation of animations) {
         if (t - startTime <= animation.delay) {
@@ -28,9 +29,12 @@ export class TimeLine {
     }
   }
   pause () {
+    console.log('pause')
+    console.log(this.requestId)
     if (!this.requestId) {
       return
     }
+    console.log(this.state)
     if (this.state !== 'playing') {
       return
     }
@@ -38,6 +42,7 @@ export class TimeLine {
     this.pauseTime = Date.now()
     cancelAnimationFrame(this.requestId)
     this.requestId = null
+    console.log('pauseend')
   }
   resume() {
     if (this.requestId) {

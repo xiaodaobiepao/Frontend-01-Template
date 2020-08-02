@@ -1,11 +1,15 @@
+import { create, Text, Wrapper } from './createElement'
 import { TimeLine, Animation } from './animation'
 import { ease } from './cubicBezier'
+
+import { enableGesture } from './gesture'
 
 export class Carousel {
   constructor(config) {
     this.children = []
     this.attributes = new Map()
     this.properties = new Map()
+    this.timeline = new TimeLine
   }
   setAttribute(name, value) {
     this[name] = value
@@ -13,9 +17,17 @@ export class Carousel {
   appendChild(child) {
     this.children.push(child)
   }
+  pause() {
+    this.timeline.pause()
+  }
   render() {
+    let nextPicStopHandler = null
+    let onStart = () => {
+      this.pause()
+      clearTimeout(nextPicStopHandler)
+    }
     let children = this.data.map(url => {
-      let element = <img src={url} />
+      let element = <img onStart={onStart} src={url} enableGesture={true} />
       element.addEventListener('dragstart', event => event.preventDefault())
       return element
     })
@@ -24,9 +36,8 @@ export class Carousel {
     </div>
 
     let position = 0
-    let timeline = new TimeLine
     let rootDom = root.root
-    timeline.start()
+    this.timeline.start()
     let nextPic = () => {
       console.log(position)
       let nextPosition = (position + 1) % this.data.length
@@ -34,8 +45,8 @@ export class Carousel {
       let next = rootDom.childNodes[nextPosition]
       let currentAnimation = new Animation(current.style, 'transform', (v => `translateX(${v}%)`), -100 * position, - 100 - 100 * position, 500, 0, ease)
       let nextAnimation = new Animation(next.style, 'transform', (v => `translateX(${v}%)`), 100 - 100 * nextPosition, -100 * nextPosition, 500, 0, ease)
-      timeline.add(currentAnimation)
-      timeline.add(nextAnimation)
+      this.timeline.add(currentAnimation)
+      this.timeline.add(nextAnimation)
       position = nextPosition
 
       // current.style.transition = 'ease 0s'
@@ -58,51 +69,51 @@ export class Carousel {
       //     position = nextPosition
       //   })
       // })
-      setTimeout(nextPic, 3000)
+      nextPicStopHandler = setTimeout(nextPic, 3000)
     }
-    setTimeout(nextPic, 3000)
-    rootDom.addEventListener('mousedown', event  => {
-      let startX = event.clientX, startY = event.clientY
-      let nextPosition = (position + 1) % this.data.length
-      let lastPosition = (position - 1 + this.data.length) % this.data.length
-      let next = root.childNodes[nextPosition]
-      let current = root.childNodes[position]
-      let last = root.childNodes[lastPosition]
+    nextPicStopHandler = setTimeout(nextPic, 3000)
+    // rootDom.addEventListener('mousedown', event  => {
+    //   let startX = event.clientX, startY = event.clientY
+    //   let nextPosition = (position + 1) % this.data.length
+    //   let lastPosition = (position - 1 + this.data.length) % this.data.length
+    //   let next = rootDom.childNodes[nextPosition]
+    //   let current = rootDom.childNodes[position]
+    //   let last = rootDom.childNodes[lastPosition]
 
-      last.style.transition = 'none'
-      current.style.transition = 'none'
-      next.style.transition = 'none'
+    //   last.style.transition = 'none'
+    //   current.style.transition = 'none'
+    //   next.style.transition = 'none'
 
-      last.style.transform = `translateX(${ -500 - 500 * lastPosition}px)`
-      current.style.transform = `translateX(${-500 * position}px)`
-      next.style.transform = `translateX(${500 - 500 * nextPosition}px)`
-      let move = event => {
-        current.style.transform = `translateX(${event.clientX - startX - 500 * position}px)`
-        last.style.transform =  `translateX(${event.clientX - startX - 500 - 500 * lastPosition}px)`
-        next.style.transform =  `translateX(${event.clientX - startX + 500 - 500 * nextPosition}px)`
-        // console.log(event.clientX)
-      }
-      let up = event => {
-        let offset = 0
-        if (event.clientX - startX > 250) {
-          offset = 1
-        } else if  (event.clientX - startX < -250) {
-          offset = -1
-        }
-        last.style.transition = 'none'
-        current.style.transition = 'none'
-        next.style.transition = 'none'
+    //   last.style.transform = `translateX(${ -500 - 500 * lastPosition}px)`
+    //   current.style.transform = `translateX(${-500 * position}px)`
+    //   next.style.transform = `translateX(${500 - 500 * nextPosition}px)`
+    //   let move = event => {
+    //     current.style.transform = `translateX(${event.clientX - startX - 500 * position}px)`
+    //     last.style.transform =  `translateX(${event.clientX - startX - 500 - 500 * lastPosition}px)`
+    //     next.style.transform =  `translateX(${event.clientX - startX + 500 - 500 * nextPosition}px)`
+    //     // console.log(event.clientX)
+    //   }
+    //   let up = event => {
+    //     let offset = 0
+    //     if (event.clientX - startX > 250) {
+    //       offset = 1
+    //     } else if  (event.clientX - startX < -250) {
+    //       offset = -1
+    //     }
+    //     last.style.transition = 'none'
+    //     current.style.transition = 'none'
+    //     next.style.transition = 'none'
 
-        current.style.transform = `translateX(${offset * 500 - 500 * position}px)`
-        last.style.transform =  `translateX(${offset * 500  - 500 - 500 * lastPosition}px)`
-        next.style.transform =  `translateX(${offset * 500  + 500 - 500 * nextPosition}px)`
-        position = (position - offset + this.data.length) % this.data.length
-        document.removeEventListener('mousemove', move)
-        document.removeEventListener('mouseup', up)
-      }
-      document.addEventListener('mousemove', move)
-      document.addEventListener('mouseup', up)
-    })
+    //     current.style.transform = `translateX(${offset * 500 - 500 * position}px)`
+    //     last.style.transform =  `translateX(${offset * 500  - 500 - 500 * lastPosition}px)`
+    //     next.style.transform =  `translateX(${offset * 500  + 500 - 500 * nextPosition}px)`
+    //     position = (position - offset + this.data.length) % this.data.length
+    //     document.removeEventListener('mousemove', move)
+    //     document.removeEventListener('mouseup', up)
+    //   }
+    //   document.addEventListener('mousemove', move)
+    //   document.addEventListener('mouseup', up)
+    // })
     return root
   }
   mountTo(parent) {
