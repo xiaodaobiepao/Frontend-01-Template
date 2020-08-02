@@ -32,6 +32,9 @@ class Wrapper {
     this.children = []
     this.root = document.createElement(type)
   }
+  get style() {
+    return this.root.style
+  }
   setAttribute(name, value) { // attribute
     // console.log(name, value)
     // console.log(name)

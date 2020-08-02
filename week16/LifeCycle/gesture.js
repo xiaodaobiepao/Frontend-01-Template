@@ -103,8 +103,12 @@ export function enableGesture(element) {
         t: Date.now()
       })
       context.moves = context.moves.filter(record => Date.now() - record.t < 300)
-      element.dispatchEvent(new CustomEvent('panmove', {}))
-      console.log('pan')
+      element.dispatchEvent(new CustomEvent('panmove', {
+        detail: {
+          dx, dy
+        }
+      }))
+      console.log('panmove')
     }
   }
   

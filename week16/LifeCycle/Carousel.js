@@ -22,12 +22,35 @@ export class Carousel {
   }
   render() {
     let nextPicStopHandler = null
-    let onStart = () => {
-      this.pause()
-      clearTimeout(nextPicStopHandler)
-    }
-    let children = this.data.map(url => {
-      let element = <img onStart={onStart} src={url} enableGesture={true} />
+    let children = this.data.map((url, currentPosition) => {
+      let lastPosition = (currentPosition - 1 + this.data.length) % this.data.length
+      let nextPosition = (currentPosition + 1) % this.data.length
+      let offset = 0
+      let startX = 0
+      let onStart = event => {
+        this.pause()
+        clearTimeout(nextPicStopHandler)
+        let curElement = children[currentPosition]
+        let currentTransformValue = Number(curElement.style.transform.match(/translateX\(([\s\S]+)px\)/)[1])
+        offset = currentTransformValue + 500 * position
+        // startX = event.clientX
+      }
+      let onPanmove = event => {
+        let lastElement = children[lastPosition]
+        let curElement = children[currentPosition]
+        let nextElement = children[nextPosition]
+        let currentTransformValue = 500 * currentPosition + offset
+        let lastTransformValue = -500 - 500 * lastPosition + offset
+        let nextTransformValue = 500 - 500 * nextPosition + offset
+        console.log(event)
+        let dx = event.detail.dx
+        console.log(dx)
+        curElement.style.transform = `translateX(${currentTransformValue + dx}px)`
+        lastElement.style.transform = `translateX(${lastTransformValue + dx}px)`
+        nextElement.style.transform = `translateX(${nextTransformValue + dx}px)`
+      }
+      let element = <img onStart={onStart} onPanmove={onPanmove} src={url} enableGesture={true} />
+      element.style.transform = 'translateX(0)'
       element.addEventListener('dragstart', event => event.preventDefault())
       return element
     })
