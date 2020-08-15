@@ -150,7 +150,7 @@ function emit(token) {
     currentTextNode = null
   } else if (token.type === 'endTag') {
     if (top.tagName !== token.tagName) {
-      // 不匹配,报错
+      throw new Error("Tag start end doesn't match!");
     } else {
       if (top.tagName === 'style') {
         addCSSRules(top.children[0].content)
@@ -469,14 +469,15 @@ function afterAttributeName(c) {
 }
 
 function beforeAttributeValue(c) {
-  if (c.match(/^[\t\n\f ]$/) || c === '/' || c === '>' || c === EOF) {
+  // console.log('cccssc', c)
+  if (c.match(/^[\t\n\f ]$/)) {
     return beforeAttributeValue
   } else if (c === '"') {
     return doubleQuotedAttributeValue
   } else if (c === "'") {
     return singleQuotedAttributeValue
   } else if (c === '>')  {
-    // 抛错This is a missing-attribute-value parse error.
+    currentToken[currentAttribute.name] = currentAttribute.value
     emit(currentToken)
     return data
   } else {
@@ -559,6 +560,7 @@ function parseHtml (html) {
   let state = data
   for (let c of html) {
     state = state(c)
+    // console.log(state)
     if (stack[stack.length - 1].tagName === 'script' && state === data) {
       state = scriptData
     }

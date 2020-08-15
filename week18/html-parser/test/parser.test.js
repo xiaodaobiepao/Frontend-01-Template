@@ -41,7 +41,7 @@ it('parse a single element', () => {
 it('parse a text element', () => {
   let doc = parseHtml('<div>hello world!</div>')
   let text = doc.children[0].children[0]
-  console.log('2text', text)
+  // console.log('2text', text)
   assert.equal(text.type, 'text')
   assert.equal(text.content, 'hello world!')
 })
@@ -50,8 +50,7 @@ it('tag mismatch', () => {
   try {
     let doc = parseHtml('<div></viv>')
   } catch (error) {
-    // console.log(error)
-    assert.equal(error.message, 'Tag start end doesnt match')
+    assert.equal(error.message, "Tag start end doesn't match!")
   }
 })
 
@@ -73,12 +72,40 @@ it('text with <', () => {
 })
 
 it('with property', () => {
-  let doc = parseHtml("<div id=abc></div>")
+  let doc = parseHtml(`<div id=abc AB=he class = 'cls' doouble="dobble" data=></div>`)
   let div = doc.children[0]
-  assert.equal(div.type, 'element')
-  assert.equal(div.attributes.length, 1)
-  assert.equal(div.attributes[0].name, 'id')
-  assert.equal(div.attributes[0].value, 'abc')
+  let count = 0
+  for (let  attr of div.attributes) {
+    if (attr.name === 'id') {
+      count++
+      assert.equal(attr.value, "abc")
+    }
+    if (attr.name === 'class') {
+      count++
+      assert.equal(attr.value, 'cls')
+    }
+    if (attr.name === 'data') {
+      count++
+      assert.equal(attr.value, '')
+    }
+  }
+  assert.equal(count, 3)
+  // assert.ok()
+})
+
+it('self close', () => {
+  let doc = parseHtml("<img />")
+  let img = doc.children[0]
+  assert.equal(img.tagName, 'img')
+  // assert.ok()
+})
+
+it('script', () => {
+  let doc = parseHtml(`<script>
+    <div>abcd</div>
+    <span>x</span>
+    /script
+  </script>`)
 })
 
 it('parse a complete html', () => {
