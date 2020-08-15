@@ -314,11 +314,11 @@ function scriptDataLessThanSign(c) {
       type: 'text',
       content: '<'
     })
-    emit({
-      type: 'text',
-      content: c
-    })
-    return scriptData
+    // emit({
+    //   type: 'text',
+    //   content: c
+    // })
+    return scriptData(c)
   }
 }
 //  script received </
@@ -328,17 +328,13 @@ function scriptDataEndTagOpen(c) {
   } else {
     emit({
       type: 'text',
-      content: '<'
+      content: '</'
     })
-    emit({
-      type: 'text',
-      content: '/'
-    })
-    emit({
-      type: 'text',
-      content: c
-    })
-    return scriptData
+    // emit({
+    //   type: 'text',
+    //   content: c
+    // })
+    return scriptData(c)
   }
 }
 
@@ -350,23 +346,19 @@ function scriptDataEndTagNameS(c)  {
       type: 'text',
       content: '</s'
     })
-    return scriptData
+    return scriptData(c)
   }
 }
 
 function scriptDataEndTagNameC(c)  {
-  if (c  === 'r') {
+  if (c === 'r') {
     return scriptDataEndTagNameR
   } else {
     emit({
       type: 'text',
       content: '</sc'
     })
-    emit({
-      type: 'text',
-      content: c
-    })
-    return scriptData
+    return scriptData(c)
   }
 }
 function scriptDataEndTagNameR(c)  {
@@ -377,11 +369,11 @@ function scriptDataEndTagNameR(c)  {
       type: 'text',
       content: '</scr'
     })
-    emit({
-      type: 'text',
-      content: c
-    })
-    return scriptData
+    // emit({
+    //   type: 'text',
+    //   content: c
+    // })
+    return scriptData(c)
   }
 }
 function scriptDataEndTagNameI(c)  {
@@ -392,15 +384,15 @@ function scriptDataEndTagNameI(c)  {
       type: 'text',
       content: '</scri'
     })
-    emit({
-      type: 'text',
-      content: c
-    })
-    return scriptData
+    // emit({
+    //   type: 'text',
+    //   content: c
+    // })
+    return scriptData(c)
   }
 }
 function scriptDataEndTagNameP(c)  {
-  if (c  === 't') {
+  if (c === 't') {
     return scriptDataEndTag
   } else {
     emit({
@@ -439,11 +431,11 @@ function scriptDataEndTag (c) {
       type: 'text',
       content: '</script'
     })
-    emit({
-      type: 'text',
-      content: c
-    })
-    return scriptData
+    // emit({
+    //   type: 'text',
+    //   content: c
+    // })
+    return scriptData(c)
   }
 }
 
@@ -464,6 +456,11 @@ function afterAttributeName(c) {
     })
   } else {
     currentToken[currentAttribute.name] = currentAttribute.value
+    currentAttribute = {
+      name: "",
+      value: ""
+    }
+    // emit(currentToken)
     return attributeName(c)
   }
 }

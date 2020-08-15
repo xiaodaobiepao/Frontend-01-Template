@@ -72,8 +72,9 @@ it('text with <', () => {
 })
 
 it('with property', () => {
-  let doc = parseHtml(`<div id=abc AB=he class = 'cls' doouble="dobble" data=></div>`)
+  let doc = parseHtml(`<div test id=abc AB=he class = 'cls'doouble="dobble" data=></div>`)
   let div = doc.children[0]
+  console.log(div)
   let count = 0
   for (let  attr of div.attributes) {
     if (attr.name === 'id') {
@@ -95,16 +96,27 @@ it('with property', () => {
 
 it('self close', () => {
   let doc = parseHtml("<img />")
+  doc = parseHtml("<img/>")
   let img = doc.children[0]
   assert.equal(img.tagName, 'img')
+  doc = parseHtml("<img/ >")
   // assert.ok()
+})
+
+it('no end tagName', () => {
+  let doc = parseHtml('<div></>')
 })
 
 it('script', () => {
   let doc = parseHtml(`<script>
     <div>abcd</div>
     <span>x</span>
-    /script
+    </s
+    </sc
+    </scr
+    </scri
+    </scrip
+    </script
   </script>`)
 })
 
