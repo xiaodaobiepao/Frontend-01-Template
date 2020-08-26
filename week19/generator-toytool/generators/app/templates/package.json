@@ -1,0 +1,17 @@
+{
+  "name": "generator-toytool",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "coverage": "nyc mocha",
+    "start": "webpack-dev-server",
+    "build": "webpack"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "yeoman-generator": "^4.11.0"
+  }
+}

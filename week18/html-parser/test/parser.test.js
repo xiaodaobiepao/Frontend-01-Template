@@ -111,6 +111,7 @@ it('script', () => {
   let doc = parseHtml(`<script>
     <div>abcd</div>
     <span>x</span>
+    <
     </s
     </sc
     </scr
