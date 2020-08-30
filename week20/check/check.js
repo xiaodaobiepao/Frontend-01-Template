@@ -10,20 +10,28 @@ page.open('http://baidu.com', function(status) {
       // return document.title
       // return 'abc'
       // return document.body.tagName
-      const toString = function(pad, element) {
-        let children = element.children
-        // console.log(children)
-        let childrenString = ''
-        for (let i = 0; i < children.length; ++i) {
-          childrenString += toString('  ' + pad, children[i].tagName + '\n')
+      var toString = function(pad, element) {
+        var children = element.children
+        var childrenString = ''
+        if (children) {
+          for (var i = 0; i < element.children.length; ++i) {
+            childrenString += toString('  ' + pad, element.children[i]) + '\n'
+          }
         }
         // return children[0].tagName
-        return pad + element.tagName + '\n' + (children && children.length ? '\n' + childrenString : '')
+        var name
+        if (element.nodeType === Node.TEXT_NODE) {
+          name = '#text' + JSON.stringify(element.textContent)
+        }
+        if (element.nodeType === Node.ELEMENT_NODE) {
+          name = element.tagName
+        }
+        return pad + name + (children && children.length ? '\n' + childrenString : '')
       }
       return toString('', document.body)
+      // return document.body.children.length
     })
     // page.render('https://baidu.com')
     console.log(body)
   }
   phantom.exit()
-})
